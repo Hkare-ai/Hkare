@@ -3,7 +3,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 import google.generativeai as genai
-from serpapi import GoogleSearch
+from serpapi.google_search import GoogleSearch
 import requests
 from bs4 import BeautifulSoup
 import os
