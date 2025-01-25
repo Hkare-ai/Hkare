@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request, Form, Body, HTTPException
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 import google.generativeai as genai
 from serpapi import GoogleSearch
@@ -36,14 +37,40 @@ class GenerateRequest(BaseModel):
     chatgptModel: Optional[str] = None
 
 app = FastAPI()
+
+# Configure templates and static files
 templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Load environment variables
 load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-SERPAPI_KEY = os.getenv("SERPAPI_KEY")
+
+# Update API keys to use environment variables
+SERPAPI_KEY = os.getenv('SERPAPI_KEY')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+# Update Chrome options for Render's environment
+def get_chrome_options():
+    chrome_options = Options()
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--disable-gpu')
+    return chrome_options
+
+# Update webdriver initialization
+def get_webdriver():
+    try:
+        chrome_options = get_chrome_options()
+        service = ChromeService()
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        return driver
+    except Exception as e:
+        print(f"Error initializing webdriver: {e}")
+        return None
 
 # Configure Gemini
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-pro')
 
@@ -200,8 +227,11 @@ async def generate_content(request: GenerateRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+async def read_root(request: Request):
+    try:
+        return templates.TemplateResponse("index.html", {"request": request})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/test-api-keys")
 async def test_api_keys(api_keys: ApiKeys):
@@ -313,4 +343,9 @@ async def search_research(
 
     except Exception as e:
         print(f"Error in search_research: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Add a health check endpoint
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"} 
