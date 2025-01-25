@@ -1,0 +1,1965 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Research Paper Assistant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            margin-top: 30px;
+        }
+        .search-box, .prompt-area {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        .prompt-area {
+            height: 200px;
+            font-family: monospace;
+        }
+        .config-section {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .submit-btn, .save-btn {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .sources {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .config-item {
+            margin-bottom: 10px;
+        }
+        label {
+            display: inline-block;
+            width: 200px;
+        }
+        
+        /* Tab Styles */
+        .tab {
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background-color: #f1f1f1;
+            margin-bottom: 20px;
+        }
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            font-size: 16px;
+        }
+        .tab button:hover {
+            background-color: #ddd;
+        }
+        .tab button.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .tabcontent {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-top: none;
+        }
+        .tabcontent.active {
+            display: block;
+        }
+        
+        /* Show the default tab */
+        #Search {
+            display: block;
+        }
+        
+        .api-key-input {
+            width: 300px;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .api-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        
+        .error-message {
+            color: red;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        
+        .success-message {
+            color: green;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        
+        .research-summary h2 {
+            color: #2c3e50;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 5px;
+        }
+        
+        .research-summary {
+            line-height: 1.6;
+            padding: 20px;
+            background: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .research-summary br {
+            display: block;
+            margin: 5px 0;
+        }
+
+        /* Research Assistant Styles */
+        .chat-container {
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .chat-header {
+            padding: 20px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            max-width: 80%;
+        }
+
+        .user-message {
+            margin-left: auto;
+            background: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 15px 15px 0 15px;
+        }
+
+        .assistant-message {
+            margin-right: auto;
+            background: white;
+            border: 1px solid #e9ecef;
+            padding: 15px;
+            border-radius: 15px 15px 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 25px;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+
+        .chat-input button {
+            padding: 12px 25px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .chat-input button:hover {
+            background: #45a049;
+        }
+
+        .loading {
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        .loading:after {
+            content: '...';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60% { content: '...'; }
+            80% { content: '....'; }
+            100% { content: '.....'; }
+        }
+
+        /* Research Sections Styles */
+        .research-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            padding: 20px;
+        }
+
+        .paper-section {
+            display: block;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            background: #4CAF50;
+            color: white;
+            padding: 15px;
+            margin: -20px -20px 20px -20px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .section-content {
+            padding: 15px 0;
+        }
+
+        .section-nav {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .section-nav a {
+            display: block;
+            padding: 5px 10px;
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .section-nav a:hover {
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+
+        /* Quick navigation menu */
+        .quick-nav {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .quick-nav a {
+            display: block;
+            padding: 5px 10px;
+            color: #333;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .quick-nav a:hover {
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+
+        .section-input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-height: 100px;
+            font-family: Arial, sans-serif;
+        }
+
+        .section-output {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+        }
+
+        .section-description {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+
+        .generate-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .generate-btn:hover {
+            background: #45a049;
+        }
+
+        /* Configuration section styles */
+        .prompt-sections {
+            display: flex;
+            gap: 20px;
+        }
+
+        .section-nav {
+            width: 200px;
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+
+        .section-nav button {
+            width: 100%;
+            text-align: left;
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            background: #f0f0f0;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .section-nav button.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .prompt-config {
+            display: none;
+            flex-grow: 1;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .prompt-config.active {
+            display: block;
+        }
+
+        .prompt-area {
+            width: 100%;
+            min-height: 300px;
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+
+        .prompt-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .save-btn {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .save-btn:hover {
+            background: #45a049;
+        }
+
+        .section-link {
+            color: #4CAF50;
+            text-decoration: none;
+            margin-left: 10px;
+        }
+
+        .section-link:hover {
+            text-decoration: underline;
+        }
+
+        .research-summary h2 {
+            color: #2c3e50;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 5px;
+        }
+        
+        .research-summary {
+            line-height: 1.6;
+            padding: 20px;
+            background: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .research-summary br {
+            display: block;
+            margin: 5px 0;
+        }
+
+        .generated-content h1 {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #4CAF50;
+        }
+        
+        .generated-content h2 {
+            font-size: 20px;
+            color: #34495e;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+        
+        .generated-content h3 {
+            font-size: 18px;
+            color: #445566;
+            margin-top: 12px;
+            margin-bottom: 6px;
+        }
+        
+        .generated-content ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .generated-content li {
+            margin: 5px 0;
+        }
+        
+        .generated-content p {
+            margin: 10px 0;
+        }
+        
+        .generated-content strong {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .generated-content em {
+            font-style: italic;
+            color: #34495e;
+        }
+
+        .section-selector {
+            position: fixed;
+            left: 0;
+            top: 60px;
+            width: 280px;
+            height: calc(100vh - 60px);
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .section-selector-header {
+            padding: 15px;
+            background: white;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .input-mode-selector {
+            padding: 10px 15px;
+            background: white;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .combined-input {
+            padding: 15px;
+            background: white;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .section-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: white;
+        }
+
+        .section-checkboxes {
+            max-height: calc(100vh - 350px);
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .section-item {
+            margin-bottom: 8px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+
+        .section-label {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .section-label:hover {
+            background: #f8f9fa;
+        }
+
+        .section-label input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        .individual-input {
+            padding: 8px;
+            border-top: 1px solid #dee2e6;
+            background: #f8f9fa;
+        }
+
+        .individual-input textarea {
+            width: 100%;
+            height: 60px;
+            padding: 8px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            resize: vertical;
+            font-size: 0.9em;
+        }
+
+        #collectiveInput {
+            width: 100%;
+            height: 100px;
+            padding: 8px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            resize: vertical;
+            font-size: 0.9em;
+        }
+
+        .generate-button-container {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Scrollbar styling */
+        .section-checkboxes::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .section-checkboxes::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .section-checkboxes::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .section-checkboxes::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+
+        .model-select {
+            width: 200px;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        #chatgptSettings, #geminiSettings {
+            display: none;
+        }
+
+        .api-settings-container {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .api-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .api-section h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .api-section label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .api-key-input:focus,
+        .model-select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+
+        .api-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .test-btn {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .save-btn {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .api-status {
+            margin-top: 10px;
+            padding: 5px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        #chatgptSettings,
+        #geminiSettings {
+            display: none;
+        }
+
+        .web-scraping-control {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        .web-scraping-control label {
+            margin-left: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .web-scraping-control input[type="checkbox"] {
+            cursor: pointer;
+            margin-right: 8px;
+        }
+
+        .loading {
+            margin-top: 8px;
+            color: #666;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+        }
+
+        .loading:after {
+            content: '...';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60% { content: '...'; }
+            80% { content: '....'; }
+            100% { content: '.....'; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Tab Navigation -->
+        <div class="tab">
+            <button class="tablinks" onclick="openTab(event, 'Input')">Input</button>
+            <button class="tablinks" onclick="openTab(event, 'Output')">Output</button>
+            <button class="tablinks" onclick="openTab(event, 'API')">API Settings</button>
+            <button class="tablinks" onclick="openTab(event, 'Prompts')">Prompts</button>
+        </div>
+
+        <!-- Research Tab Content -->
+        <div id="Input" class="tabcontent">
+            <!-- Section selector panel with integrated inputs -->
+            <div class="section-selector">
+                <div class="section-selector-header">
+                    <h3>Research Paper Sections</h3>
+                </div>
+                
+                <div class="input-mode-selector">
+                    <label>
+                        <input type="radio" name="inputMode" value="combined" checked> Combined Input
+                    </label>
+                    <label>
+                        <input type="radio" name="inputMode" value="individual"> Individual Inputs
+                    </label>
+                </div>
+
+                <div class="web-scraping-control">
+                    <label>
+                        <input type="checkbox" id="enableWebScraping" onchange="handleWebScrapingToggle(this)"> Enable Web Scraping
+                    </label>
+                </div>
+                
+                <!-- Combined input area -->
+                <div id="combinedInputArea" class="combined-input">
+                    <textarea id="collectiveInput" placeholder="Enter your research details here..."></textarea>
+                </div>
+
+                <!-- Sections with integrated individual inputs -->
+                <div class="section-list">
+                    <div class="selector-controls">
+                        <button onclick="selectAllSections()">Select All</button>
+                        <button onclick="deselectAllSections()">Deselect All</button>
+                    </div>
+                    <div class="section-checkboxes" id="sectionCheckboxes"></div>
+                </div>
+
+                <div class="generate-button-container">
+                    <button onclick="generateSelectedSections()" class="generate-btn">Generate Paper</button>
+                </div>
+            </div>
+
+            <!-- Paper output area -->
+            <div class="paper-layout">
+                <div class="paper-output">
+                    <div id="combinedOutput" class="research-paper">
+                        <div class="paper-header">
+                            <h1>Research Paper</h1>
+                        </div>
+                        <div class="combined-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration Tab Content -->
+        <div id="Output" class="tabcontent">
+            <div class="prompt-sections">
+                <div class="section-nav">
+                    <button onclick="showPromptConfig('objective')" class="active">1. Objective</button>
+                    <button onclick="showPromptConfig('design')">2. Design</button>
+                    <button onclick="showPromptConfig('introduction')">3. Introduction</button>
+                    <button onclick="showPromptConfig('literature')">4. Literature</button>
+                    <button onclick="showPromptConfig('methods')">5. Methods</button>
+                    <button onclick="showPromptConfig('results')">6. Results</button>
+                    <button onclick="showPromptConfig('analysis')">7. Analysis</button>
+                    <button onclick="showPromptConfig('interpretation')">8. Interpretation</button>
+                    <button onclick="showPromptConfig('discussion')">9. Discussion</button>
+                    <button onclick="showPromptConfig('conclusion')">10. Conclusion</button>
+                    <button onclick="showPromptConfig('references')">11. References</button>
+                    <button onclick="showPromptConfig('submission')">12. Submission</button>
+                </div>
+
+                <!-- Prompt Configuration Sections -->
+                <div id="objective-prompt" class="prompt-config active">
+                    <h3>Research Objective Prompt Template</h3>
+                    <div class="section-description">Customize how the AI should generate research objectives.</div>
+                    <textarea class="prompt-area" id="objectivePrompt">Based on the following research topic:
+
+{input}
+
+Please generate:
+1. Primary Research Objective
+2. Secondary Objectives (2-3)
+3. Specific Research Questions
+4. Research Hypotheses
+5. Scope and Limitations
+
+Format the output with clear headings and bullet points.</textarea>
+                    <div class="prompt-actions">
+                        <button onclick="savePromptTemplate('objective')" class="save-btn">Save Template</button>
+                    </div>
+                </div>
+
+                <!-- Study Design Prompt -->
+                <div id="design-prompt" class="prompt-config">
+                    <h3>Study Design Prompt Template</h3>
+                    <div class="section-description">Customize the prompt for generating study design.</div>
+                    <textarea class="prompt-area" id="designPrompt">Based on these research objectives:
+
+{input}
+
+Please provide a comprehensive study design including:
+1. Research Approach (Qualitative/Quantitative/Mixed)
+2. Study Type (e.g., Experimental, Observational, etc.)
+3. Data Collection Methods
+4. Sampling Strategy
+5. Timeline Recommendations
+6. Potential Methodological Challenges
+
+Format with clear sections and bullet points.</textarea>
+                    <div class="prompt-actions">
+                        <button onclick="savePromptTemplate('design')" class="save-btn">Save Template</button>
+                    </div>
+                </div>
+
+                <!-- Introduction Prompt -->
+                <div id="introduction-prompt" class="prompt-config">
+                    <h3>Introduction Section Prompt Template</h3>
+                    <div class="section-description">Customize the prompt for generating the introduction.</div>
+                    <textarea class="prompt-area" id="introductionPrompt">Based on this research focus:
+
+{input}
+
+Please generate a comprehensive introduction including:
+1. Background Context
+2. Problem Statement
+3. Research Significance
+4. Current Knowledge Gaps
+5. Study Rationale
+6. Research Aims and Objectives
+
+Format with clear paragraphs and logical flow.</textarea>
+                    <div class="prompt-actions">
+                        <button onclick="savePromptTemplate('introduction')" class="save-btn">Save Template</button>
+                    </div>
+                </div>
+
+                <!-- Literature Review Prompt -->
+                <div id="literature-prompt" class="prompt-config">
+                    <h3>Literature Review Prompt Template</h3>
+                    <div class="section-description">Customize the prompt for generating literature review.</div>
+                    <textarea class="prompt-area" id="literaturePrompt">Based on this research topic:
+
+{input}
+
+Please provide a comprehensive literature review including:
+1. Historical Background
+2. Current State of Research
+3. Key Theories and Concepts
+4. Major Studies and Findings
+5. Research Gaps
+6. Theoretical Framework
+7. Critical Analysis of Existing Literature
+
+Format with clear sections and citations.</textarea>
+                    <div class="prompt-actions">
+                        <button onclick="savePromptTemplate('literature')" class="save-btn">Save Template</button>
+                    </div>
+                </div>
+
+                <!-- Methods Prompt -->
+                <div id="methods-prompt" class="prompt-config">
+                    <h3>Methods Section Prompt Template</h3>
+                    <div class="section-description">Customize the prompt for generating methodology.</div>
+                    <textarea class="prompt-area" id="methodsPrompt">Based on this research approach:
+
+{input}
+
+Please provide detailed methodology including:
+1. Research Design
+2. Population and Sampling
+3. Data Collection Methods
+4. Instruments and Materials
+5. Procedures
+6. Ethical Considerations
+7. Data Analysis Methods
+8. Validity and Reliability
+
+Format with clear subsections and detailed procedures.</textarea>
+                    <div class="prompt-actions">
+                        <button onclick="savePromptTemplate('methods')" class="save-btn">Save Template</button>
+                    </div>
+                </div>
+
+                <!-- Results Prompt -->
+                <div id="results-prompt" class="prompt-config">
+                    <h3>Results Section Prompt Template</h3>
+                    <div class="section-description">Customize the prompt for generating results.</div>
+                    <textarea class="prompt-area" id="resultsPrompt">Based on these findings:
+
+{input}
+
+Please organize and present the results including:
+1. Overview of Data Collected
+2. Primary Findings
+3. Statistical Analyses
+4. Key Patterns and Trends
+5. Unexpected Findings
+6. Tables and Figures Description
+7. Summary of Results
+
+Present results objectively without interpretation.</textarea>
+                    <div class="prompt-actions">
+                        <button onclick="savePromptTemplate('results')" class="save-btn">Save Template</button>
+                    </div>
+                </div>
+
+                <!-- Analysis Prompt -->
+                <div id="analysis-prompt" class="prompt-config">
+                    <h3>Data Analysis Prompt Template</h3>
+                    <div class="section-description">Customize the prompt for generating data analysis.</div>
+                    <textarea class="prompt-area" id="analysisPrompt">Based on these results:
+
+{input}
+
+Please provide comprehensive data analysis including:
+1. Statistical Methods Used
+2. Data Processing Steps
+3. Quantitative Analysis
+4. Qualitative Analysis (if applicable)
+5. Statistical Significance
+6. Effect Sizes
+7. Correlation Analysis
+8. Regression Analysis (if applicable)
+
+Format with clear analytical steps.</textarea>
+                    <div class="prompt-actions">
+                        <button onclick="savePromptTemplate('analysis')" class="save-btn">Save Template</button>
+                    </div>
+                </div>
+
+                <!-- Interpretation Prompt -->
+                <div id="interpretation-prompt" class="prompt-config">
+                    <h3>Data Interpretation Prompt Template</h3>
+                    <div class="section-description">Customize the prompt for generating interpretation.</div>
+                    <textarea class="prompt-area" id="interpretationPrompt">Based on the analysis:
+
+{input}
+
+Please provide detailed interpretation including:
+1. Meaning of Results
+2. Patterns and Trends
+3. Relationship to Research Questions
+4. Comparison with Expected Outcomes
+5. Theoretical Implications
+6. Practical Implications
+7. Limitations of Interpretation
+
+Format with clear reasoning.</textarea>
+                    <div class="prompt-actions">
+                        <button onclick="savePromptTemplate('interpretation')" class="save-btn">Save Template</button>
+                    </div>
+                </div>
+
+                <!-- Discussion Prompt -->
+                <div id="discussion-prompt" class="prompt-config">
+                    <h3>Discussion Section Prompt Template</h3>
+                    <div class="section-description">Customize the prompt for generating discussion.</div>
+                    <textarea class="prompt-area" id="discussionPrompt">Based on these findings:
+
+{input}
+
+Please provide a comprehensive discussion including:
+1. Summary of Key Findings
+2. Relationship to Existing Literature
+3. Theoretical Implications
+4. Practical Implications
+5. Strengths and Limitations
+6. Unexpected Findings
+7. Future Research Directions
+8. Recommendations
+
+Format with clear arguments and scholarly tone.</textarea>
+                    <div class="prompt-actions">
+                        <button onclick="savePromptTemplate('discussion')" class="save-btn">Save Template</button>
+                    </div>
+                </div>
+
+                <!-- Conclusion Prompt -->
+                <div id="conclusion-prompt" class="prompt-config">
+                    <h3>Conclusion Prompt Template</h3>
+                    <div class="section-description">Customize the prompt for generating conclusion.</div>
+                    <textarea class="prompt-area" id="conclusionPrompt">Based on the complete study:
+
+{input}
+
+Please provide a comprehensive conclusion including:
+1. Summary of Research Purpose
+2. Key Findings and Outcomes
+3. Theoretical Contributions
+4. Practical Implications
+5. Limitations
+6. Future Research Directions
+7. Final Thoughts
+
+Format concisely while capturing the essence of the study.</textarea>
+                    <div class="prompt-actions">
+                        <button onclick="savePromptTemplate('conclusion')" class="save-btn">Save Template</button>
+                    </div>
+                </div>
+
+                <!-- References Prompt -->
+                <div id="references-prompt" class="prompt-config">
+                    <h3>References Section Prompt Template</h3>
+                    <div class="section-description">Customize the prompt for generating references.</div>
+                    <textarea class="prompt-area" id="referencesPrompt">Based on these citations:
+
+{input}
+
+Please format the references according to:
+1. APA Style Guidelines
+2. Alphabetical Order
+3. Types of Sources
+4. Digital Object Identifiers
+5. Online Sources
+6. Conference Proceedings
+7. Academic Sources
+
+Ensure proper formatting and completeness.</textarea>
+                    <div class="prompt-actions">
+                        <button onclick="savePromptTemplate('references')" class="save-btn">Save Template</button>
+                    </div>
+                </div>
+
+                <!-- Submission Prompt -->
+                <div id="submission-prompt" class="prompt-config">
+                    <h3>Submission Guidelines Prompt Template</h3>
+                    <div class="section-description">Customize the prompt for generating submission guidelines.</div>
+                    <textarea class="prompt-area" id="submissionPrompt">Based on these requirements:
+
+{input}
+
+Please provide submission guidelines including:
+1. Formatting Requirements
+2. File Format Specifications
+3. Document Structure
+4. Word Count/Page Limits
+5. Citation Style
+6. Figure and Table Guidelines
+7. Submission Checklist
+8. Cover Letter Requirements
+
+Format as a clear checklist for submission.</textarea>
+                    <div class="prompt-actions">
+                        <button onclick="savePromptTemplate('submission')" class="save-btn">Save Template</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Settings Tab Content -->
+        <div id="API" class="tabcontent">
+            <div class="api-settings-container">
+                <h2>API Configuration</h2>
+                
+                <!-- Model Selection -->
+                <div class="api-section">
+                    <label for="modelSelection">Select AI Model:</label>
+                    <select id="modelSelection" class="model-select">
+                        <option value="gemini">Google Gemini</option>
+                        <option value="chatgpt">OpenAI ChatGPT</option>
+                    </select>
+                </div>
+                
+                <!-- Gemini API Settings -->
+                <div class="api-section" id="geminiSettings">
+                    <h3>Gemini API Settings</h3>
+                    <label for="geminiApiKey">API Key:</label>
+                    <input type="password" 
+                           id="geminiApiKey" 
+                           class="api-key-input" 
+                           placeholder="Enter Gemini API Key">
+                    <div id="geminiApiStatus" class="api-status"></div>
+                </div>
+                
+                <!-- ChatGPT API Settings -->
+                <div class="api-section" id="chatgptSettings">
+                    <h3>ChatGPT API Settings</h3>
+                    <label for="chatgptApiKey">API Key:</label>
+                    <input type="password" 
+                           id="chatgptApiKey" 
+                           class="api-key-input" 
+                           placeholder="Enter OpenAI API Key">
+                    <label for="chatgptModel">Model:</label>
+                    <select id="chatgptModel" class="model-select">
+                        <option value="gpt-4">GPT-4</option>
+                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    </select>
+                    <div id="chatgptApiStatus" class="api-status"></div>
+                </div>
+                
+                <div class="api-buttons">
+                    <button onclick="testApiKeys()" class="btn test-btn">Test API Keys</button>
+                    <button onclick="saveApiKeys()" class="btn save-btn">Save API Keys</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prompts Tab Content -->
+        <div id="Prompts" class="tabcontent">
+            <!-- Existing Prompts tab content -->
+        </div>
+    </div>
+
+    <script>
+        // Tab functionality
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+            
+            // If opening API tab, initialize the settings
+            if (tabName === 'API') {
+                updateVisibleSettings();
+            }
+        }
+
+        // Initialize the first tab as active
+        document.addEventListener('DOMContentLoaded', function() {
+            // Open the Input tab by default
+            document.querySelector('.tablinks').click();
+            
+            // Initialize model selection handler
+            const modelSelect = document.getElementById('modelSelection');
+            modelSelect.addEventListener('change', updateVisibleSettings);
+            
+            // Load saved settings
+            loadSavedSettings();
+        });
+
+        function updateVisibleSettings() {
+            const selectedModel = document.getElementById('modelSelection').value;
+            document.getElementById('geminiSettings').style.display = 
+                selectedModel === 'gemini' ? 'block' : 'none';
+            document.getElementById('chatgptSettings').style.display = 
+                selectedModel === 'chatgpt' ? 'block' : 'none';
+        }
+
+        function loadSavedSettings() {
+            const savedKeys = JSON.parse(localStorage.getItem('apiKeys')) || {};
+            
+            if (savedKeys.selectedModel) {
+                document.getElementById('modelSelection').value = savedKeys.selectedModel;
+            }
+            if (savedKeys.geminiApiKey) {
+                document.getElementById('geminiApiKey').value = savedKeys.geminiApiKey;
+            }
+            if (savedKeys.chatgptApiKey) {
+                document.getElementById('chatgptApiKey').value = savedKeys.chatgptApiKey;
+            }
+            if (savedKeys.chatgptModel) {
+                document.getElementById('chatgptModel').value = savedKeys.chatgptModel;
+            }
+            
+            updateVisibleSettings();
+        }
+
+        // API Key functions
+        async function testApiKeys() {
+            const selectedModel = document.getElementById('modelSelection').value;
+            const geminiApiKey = document.getElementById('geminiApiKey').value;
+            const chatgptApiKey = document.getElementById('chatgptApiKey').value;
+            const chatgptModel = document.getElementById('chatgptModel').value;
+
+            if (selectedModel === 'gemini' && !geminiApiKey) {
+                alert('Gemini API key is required!');
+                return;
+            }
+
+            if (selectedModel === 'chatgpt' && (!chatgptApiKey || !chatgptModel)) {
+                alert('ChatGPT API key and model selection are required!');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/test-api-keys', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        selectedModel,
+                        geminiApiKey,
+                        chatgptApiKey,
+                        chatgptModel
+                    })
+                });
+                
+                const results = await response.json();
+                
+                document.getElementById('geminiApiStatus').innerHTML = 
+                    results.geminiApi ? '✅ Valid' : '❌ Invalid';
+                document.getElementById('chatgptApiStatus').innerHTML = 
+                    results.chatgptApi ? '✅ Valid' : '❌ Invalid';
+            } catch (error) {
+                console.error('Error testing API keys:', error);
+                alert('Error testing API keys. Check console for details.');
+            }
+        }
+
+        function saveApiKeys() {
+            const apiKeys = {
+                selectedModel: document.getElementById('modelSelection').value,
+                geminiApiKey: document.getElementById('geminiApiKey').value,
+                chatgptApiKey: document.getElementById('chatgptApiKey').value,
+                chatgptModel: document.getElementById('chatgptModel').value
+            };
+            
+            localStorage.setItem('apiKeys', JSON.stringify(apiKeys));
+            alert('API settings saved successfully!');
+        }
+    </script>
+
+    <!-- Add this script section before your existing scripts -->
+    <script>
+        function formatMarkdown(text) {
+            if (!text) return '';
+            
+            // Replace headers
+            text = text.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+            text = text.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+            text = text.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+            
+            // Replace bold text
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Replace italic text
+            text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            
+            // Replace bullet points
+            text = text.replace(/^\s*[-*]\s(.*)$/gm, '<li>$1</li>');
+            text = text.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+            
+            // Replace numbered lists
+            text = text.replace(/^\d+\.\s(.*)$/gm, '<li>$1</li>');
+            text = text.replace(/(<li>.*<\/li>)/gs, '<ol>$1</ol>');
+            
+            // Replace newlines with breaks
+            text = text.replace(/\n\n/g, '</p><p>');
+            text = text.replace(/\n/g, '<br>');
+            
+            // Wrap in paragraphs if not already wrapped
+            if (!text.startsWith('<')) {
+                text = '<p>' + text + '</p>';
+            }
+            
+            return text;
+        }
+
+        // Add styles for the formatted content
+        const styleSheet = document.createElement("style");
+        styleSheet.textContent = `
+            .generated-content {
+                line-height: 1.6;
+                font-family: Arial, sans-serif;
+            }
+            
+            .generated-content h1 {
+                font-size: 24px;
+                color: #2c3e50;
+                margin-top: 20px;
+                margin-bottom: 10px;
+                padding-bottom: 5px;
+                border-bottom: 2px solid #4CAF50;
+            }
+            
+            .generated-content h2 {
+                font-size: 20px;
+                color: #34495e;
+                margin-top: 15px;
+                margin-bottom: 8px;
+            }
+            
+            .generated-content h3 {
+                font-size: 18px;
+                color: #445566;
+                margin-top: 12px;
+                margin-bottom: 6px;
+            }
+            
+            .generated-content ul, .generated-content ol {
+                margin: 10px 0;
+                padding-left: 20px;
+            }
+            
+            .generated-content li {
+                margin: 5px 0;
+            }
+            
+            .generated-content p {
+                margin: 10px 0;
+            }
+            
+            .generated-content strong {
+                font-weight: 600;
+                color: #2c3e50;
+            }
+            
+            .generated-content em {
+                font-style: italic;
+                color: #34495e;
+            }
+        `;
+        document.head.appendChild(styleSheet);
+    </script>
+
+    <script>
+        // Add this to ensure all prompts are loaded on startup
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = [
+                'objective', 'design', 'introduction', 'literature', 
+                'methods', 'results', 'analysis', 'interpretation', 
+                'discussion', 'conclusion', 'references', 'submission'
+            ];
+            
+            sections.forEach(section => {
+                const savedTemplate = localStorage.getItem(`${section}Prompt`);
+                const promptElement = document.getElementById(`${section}Prompt`);
+                if (savedTemplate && promptElement) {
+                    promptElement.value = savedTemplate;
+                }
+            });
+        });
+    </script>
+
+    <!-- Add this script section at the end of your body tag -->
+    <script>
+        // Function to handle tab switching
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            if (evt) {
+                evt.currentTarget.className += " active";
+            }
+        }
+
+        // Function to show specific prompt configuration
+        function showPromptConfig(section) {
+            // Hide all prompt configs
+            document.querySelectorAll('.prompt-config').forEach(config => {
+                config.classList.remove('active');
+            });
+            
+            // Show selected prompt config
+            const selectedConfig = document.getElementById(`${section}-prompt`);
+            if (selectedConfig) {
+                selectedConfig.classList.add('active');
+            }
+            
+            // Update nav buttons
+            document.querySelectorAll('.section-nav button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.querySelector(`.section-nav button[onclick*="${section}"]`).classList.add('active');
+        }
+
+        // Function to save prompt templates
+        function savePromptTemplate(section) {
+            const template = document.getElementById(`${section}Prompt`).value;
+            localStorage.setItem(`${section}Prompt`, template);
+            alert(`Prompt template for ${section} saved successfully!`);
+        }
+
+        // Update the getAPIKeys function
+        function getAPIKeys() {
+            try {
+                const savedKeys = JSON.parse(localStorage.getItem('apiKeys')) || {};
+                const selectedModel = document.getElementById('modelSelection').value;
+                console.log('Selected model:', selectedModel);
+                console.log('Saved keys:', { ...savedKeys, geminiApiKey: '***', chatgptApiKey: '***' });
+                
+                const baseKeys = {
+                    model: selectedModel
+                };
+                
+                if (selectedModel === 'gemini') {
+                    const geminiApiKey = savedKeys.geminiApiKey || document.getElementById('geminiApiKey')?.value;
+                    if (!geminiApiKey) {
+                        throw new Error('Gemini API key is required');
+                    }
+                    return {
+                        ...baseKeys,
+                        geminiApiKey
+                    };
+                } else {
+                    const chatgptKey = savedKeys.chatgptApiKey || document.getElementById('chatgptApiKey')?.value;
+                    const chatgptModel = savedKeys.chatgptModel || document.getElementById('chatgptModel')?.value;
+                    if (!chatgptKey || !chatgptModel) {
+                        throw new Error('ChatGPT API key and model are required');
+                    }
+                    return {
+                        ...baseKeys,
+                        chatgptKey,
+                        chatgptModel
+                    };
+                }
+            } catch (error) {
+                console.error('Error getting API keys:', error);
+                throw new Error('Failed to retrieve API keys. Please check your API Settings.');
+            }
+        }
+
+        // Helper function to debug the configuration screen structure
+        function debugConfigStructure() {
+            console.log('=== Configuration Screen Structure ===');
+            // Log all textareas in the configuration tab
+            document.querySelectorAll('textarea').forEach(textarea => {
+                console.log('Found textarea:', {
+                    id: textarea.id,
+                    name: textarea.name,
+                    dataSection: textarea.dataset.section,
+                    value: textarea.value.trim().substring(0, 50) + '...',
+                    parent: textarea.parentElement.id
+                });
+            });
+        }
+
+        // Updated getLatestPrompt function to match your configuration screen structure
+        function getLatestPrompt(section) {
+            // Log the section we're looking for
+            console.log(`Searching for prompt for section: ${section}`);
+
+            // List all possible selectors for the prompt textarea
+            const selectors = [
+                `#prompt-${section}`,              // Try standard ID format
+                `#${section}-prompt`,              // Try alternate ID format
+                `textarea[name="prompt-${section}"]`, // Try name attribute
+                `textarea[data-section="${section}"]`, // Try data attribute
+                `#section-${section} textarea`,     // Try parent section
+                `textarea[id*="${section}"]`,       // Try partial ID match
+                'textarea'                          // Get all textareas as fallback
+            ];
+
+            // Log all textareas in the document for debugging
+            const allTextareas = document.querySelectorAll('textarea');
+            console.log('All textareas found:', Array.from(allTextareas).map(t => ({
+                id: t.id,
+                name: t.name,
+                value: t.value ? 'Has content' : 'Empty',
+                dataset: t.dataset
+            })));
+
+            // Try each selector
+            for (const selector of selectors) {
+                const elements = document.querySelectorAll(selector);
+                console.log(`Trying selector "${selector}":`, elements.length, 'elements found');
+                
+                // Check each matching element
+                for (const element of elements) {
+                    if (element.value && element.value.trim()) {
+                        // If this textarea contains the section name in its ID or data attributes
+                        const isRelevant = 
+                            element.id.includes(section) || 
+                            element.name.includes(section) || 
+                            element.dataset.section === section;
+
+                        if (isRelevant) {
+                            console.log(`Found matching prompt for ${section}:`, {
+                                element: element,
+                                value: element.value.trim().substring(0, 50) + '...'
+                            });
+                            return element.value.trim();
+                        }
+                    }
+                }
+            }
+
+            // If we get here, we couldn't find the prompt
+            console.error(`No prompt found for section "${section}" after trying all selectors`);
+            return null;
+        }
+
+        // Add this function to handle prompt formatting with user input
+        function formatPromptWithInput(promptTemplate, userInput) {
+            // Replace all instances of {input} with the actual user input
+            return promptTemplate.replace(/{input}/g, userInput);
+        }
+
+        // Update the generateSelectedSections function
+        async function generateSelectedSections() {
+            try {
+                const selectedModel = document.getElementById('modelSelection').value;
+                let requestPayload = {
+                    model: selectedModel,
+                    safety_settings: [
+                        {"category": "HATE_SPEECH", "threshold": "BLOCK_ONLY_HIGH"},
+                        {"category": "HARASSMENT", "threshold": "BLOCK_ONLY_HIGH"},
+                        {"category": "DANGEROUS", "threshold": "BLOCK_ONLY_HIGH"},
+                        {"category": "SEXUALLY_EXPLICIT", "threshold": "BLOCK_ONLY_HIGH"},
+                        {"category": "VIOLENCE", "threshold": "BLOCK_ONLY_HIGH"}
+                    ]
+                };
+
+                const selectedCheckboxes = document.querySelectorAll('.section-checkboxes input[type="checkbox"]:checked');
+                if (selectedCheckboxes.length === 0) {
+                    alert('Please select at least one section to generate.');
+                    return;
+                }
+
+                const paperOutput = document.querySelector('.combined-content');
+                const inputMode = document.querySelector('input[name="inputMode"]:checked').value;
+                const collectiveInput = document.getElementById('collectiveInput')?.value?.trim();
+                let allResults = '';
+
+                // Process each selected section
+                for (const checkbox of selectedCheckboxes) {
+                    const section = checkbox.value;
+                    let userInput;
+                    let enhancedInput;
+                    
+                    if (inputMode === 'combined') {
+                        userInput = collectiveInput;
+                    } else {
+                        userInput = document.getElementById(`${section}-input`)?.value?.trim();
+                    }
+
+                    if (!userInput) {
+                        console.warn(`No input provided for section: ${section}`);
+                        continue;
+                    }
+
+                    // Only perform web search for Literature Review section if enabled
+                    if (section === 'literature' && document.getElementById('enableWebScraping').checked) {
+                        try {
+                            const tempDiv = document.createElement('div');
+                            tempDiv.className = 'loading';
+                            tempDiv.textContent = 'Fetching web search results for Literature Review...';
+                            paperOutput.insertBefore(tempDiv, paperOutput.firstChild);
+
+                            const response = await fetch('/search', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    query: userInput,
+                                    numWebsites: 5,
+                                    contentLimit: 1000,
+                                    model: selectedModel,
+                                    geminiApiKey: document.getElementById('geminiApiKey')?.value,
+                                    chatgptApiKey: document.getElementById('chatgptApiKey')?.value,
+                                    chatgptModel: document.getElementById('chatgptModel')?.value
+                                })
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+
+                            const data = await response.json();
+                            
+                            enhancedInput = `
+Research Topic: ${userInput}
+
+Relevant Web Research for Literature Review:
+${data.results}
+
+Please incorporate the above web research findings into a comprehensive literature review section.
+Focus on analyzing and synthesizing the existing research, identifying key themes, gaps, and relationships between different studies.
+`;
+                            tempDiv.remove();
+                        } catch (error) {
+                            console.error('Web scraping failed:', error);
+                            if (!confirm('Web search failed for Literature Review. Would you like to proceed without web data?')) {
+                                continue;
+                            }
+                            enhancedInput = userInput;
+                        }
+                    } else {
+                        enhancedInput = userInput;
+                    }
+
+                    const promptTemplate = document.getElementById(`${section}Prompt`)?.value;
+                    if (!promptTemplate) {
+                        console.error(`No prompt template found for section: ${section}`);
+                        continue;
+                    }
+
+                    const formattedPrompt = formatPromptWithInput(promptTemplate, enhancedInput);
+
+                    const sectionPayload = {
+                        ...requestPayload,
+                        input: enhancedInput,
+                        prompt: formattedPrompt,
+                        section: section
+                    };
+
+                    // Add API keys based on selected model
+                    if (sectionPayload.model === 'gemini') {
+                        sectionPayload.geminiApiKey = document.getElementById('geminiApiKey').value;
+                    } else {
+                        sectionPayload.chatgptKey = document.getElementById('chatgptApiKey').value;
+                        sectionPayload.chatgptModel = document.getElementById('chatgptModel').value;
+                        delete sectionPayload.safety_settings;
+                    }
+
+                    try {
+                        const response = await fetch('/generate', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(sectionPayload)
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+
+                        const data = await response.json();
+                        
+                        if (data.content) {
+                            const sectionInfo = sections.find(s => s.id === section);
+                            allResults += `
+                                <div class="section-result">
+                                    <h2>${sectionInfo ? sectionInfo.title : section}</h2>
+                                    <div class="generated-content">
+                                        ${formatGeminiOutput(data.content)}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    } catch (error) {
+                        console.error(`Error generating content for ${section}:`, error);
+                        allResults += `
+                            <div class="error-message">
+                                Error generating content for ${section}: ${error.message}
+                            </div>
+                        `;
+                    }
+                }
+
+                paperOutput.innerHTML = allResults || '<div class="error-message">No content was generated.</div>';
+
+            } catch (error) {
+                console.error('Generation error:', error);
+                paperOutput.innerHTML = `
+                    <div class="error-message">
+                        Error generating content: ${error.message}
+                        <br>
+                        <small>Check the console for more details.</small>
+                    </div>
+                `;
+            }
+        }
+
+        // Function to get web search results
+        async function getWebSearchResults(query) {
+            try {
+                const response = await fetch('/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        numWebsites: 5, // Limit to 5 websites for faster results
+                        contentLimit: 1000, // Limit content length
+                        model: document.getElementById('modelSelection').value,
+                        geminiApiKey: document.getElementById('geminiApiKey')?.value,
+                        chatgptApiKey: document.getElementById('chatgptApiKey')?.value,
+                        chatgptModel: document.getElementById('chatgptModel')?.value
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.results;
+            } catch (error) {
+                console.error('Error in web search:', error);
+                throw error;
+            }
+        }
+    </script>
+
+    <!-- Add these styles for better visibility of active states -->
+    <style>
+        .prompt-config {
+            display: none;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .prompt-config.active {
+            display: block;
+        }
+
+        .section-nav button {
+            width: 100%;
+            text-align: left;
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            background: #f0f0f0;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .section-nav button.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error {
+            color: #d63031;
+            padding: 10px;
+            background: #ffe3e3;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .success {
+            color: #2ecc71;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+
+    <script>
+        const sections = [
+            { id: 'objective', title: 'Research Objective' },
+            { id: 'design', title: 'Study Design' },
+            { id: 'introduction', title: 'Introduction' },
+            { id: 'literature', title: 'Literature Review' },
+            { id: 'methods', title: 'Methods' },
+            { id: 'results', title: 'Results' },
+            { id: 'analysis', title: 'Analysis' },
+            { id: 'interpretation', title: 'Interpretation' },
+            { id: 'discussion', title: 'Discussion' },
+            { id: 'conclusion', title: 'Conclusion' },
+            { id: 'references', title: 'References' },
+            { id: 'submission', title: 'Submission' }
+        ];
+
+        function createSections() {
+            const container = document.getElementById('sectionCheckboxes');
+            container.innerHTML = sections.map((section, index) => `
+                <div class="section-item">
+                    <label class="section-label">
+                        <input type="checkbox" value="${section.id}">
+                        <span>${index + 1}. ${section.title}</span>
+                    </label>
+                    <div class="individual-input" style="display: none;">
+                        <textarea id="${section.id}-input" 
+                                 placeholder="Enter ${section.title.toLowerCase()} details..."
+                                 class="section-input"></textarea>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleInputMode() {
+            const mode = document.querySelector('input[name="inputMode"]:checked').value;
+            const individualInputs = document.querySelectorAll('.individual-input');
+            const combinedInput = document.getElementById('combinedInputArea');
+            
+            if (mode === 'individual') {
+                individualInputs.forEach(input => {
+                    const checkbox = input.previousElementSibling.querySelector('input[type="checkbox"]');
+                    input.style.display = checkbox.checked ? 'block' : 'none';
+                });
+                combinedInput.style.display = 'none';
+            } else {
+                individualInputs.forEach(input => input.style.display = 'none');
+                combinedInput.style.display = 'block';
+            }
+        }
+
+        // Initialize event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            createSections();
+            
+            // Input mode toggle
+            document.querySelectorAll('input[name="inputMode"]').forEach(radio => {
+                radio.addEventListener('change', toggleInputMode);
+            });
+
+            // Checkbox change handlers
+            document.querySelectorAll('.section-label input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    if (document.querySelector('input[name="inputMode"]:checked').value === 'individual') {
+                        const inputArea = this.closest('.section-label').nextElementSibling;
+                        inputArea.style.display = this.checked ? 'block' : 'none';
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
+        // Only updating these specific functions, everything else remains unchanged
+        function selectAllSections() {
+            document.querySelectorAll('.section-checkboxes input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = true;
+                // Update individual input visibility if in individual mode
+                const inputArea = checkbox.closest('.section-item').querySelector('.individual-input');
+                if (inputArea && document.querySelector('input[name="inputMode"]:checked').value === 'individual') {
+                    inputArea.style.display = 'block';
+                }
+            });
+        }
+
+        function deselectAllSections() {
+            document.querySelectorAll('.section-checkboxes input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+                // Update individual input visibility if in individual mode
+                const inputArea = checkbox.closest('.section-item').querySelector('.individual-input');
+                if (inputArea) {
+                    inputArea.style.display = 'none';
+                }
+            });
+        }
+    </script>
+
+    <script>
+        // Add the formatGeminiOutput function
+        function formatGeminiOutput(content) {
+            if (!content) return '';
+            
+            return content
+                // Headers
+                .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+                .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+                .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+                // Bold
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                // Italic
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                // Lists
+                .replace(/^\s*[-*+]\s+(.*)/gm, '<li>$1</li>')
+                .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+                // Numbered lists
+                .replace(/^\d+\.\s+(.*)/gm, '<li>$1</li>')
+                .replace(/(<li>.*<\/li>)/gs, '<ol>$1</ol>')
+                // Code blocks
+                .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+                // Inline code
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                // Paragraphs
+                .replace(/\n\n/g, '</p><p>')
+                // Line breaks
+                .replace(/\n/g, '<br>')
+                // Wrap in paragraph if not already wrapped
+                .replace(/^(.+)$/, '<p>$1</p>');
+        }
+    </script>
+
+    <script>
+        // Simplify handleWebScrapingToggle to just validate input
+        function handleWebScrapingToggle(checkbox) {
+            if (checkbox.checked) {
+                const inputMode = document.querySelector('input[name="inputMode"]:checked').value;
+                let userInput;
+                
+                if (inputMode === 'combined') {
+                    userInput = document.getElementById('collectiveInput')?.value?.trim();
+                } else {
+                    userInput = document.getElementById('literature-input')?.value?.trim();
+                }
+
+                if (!userInput) {
+                    alert('Please enter research input before enabling web search.');
+                    checkbox.checked = false;
+                    return;
+                }
+            }
+        }
+    </script>
+</body>
+</html> 
