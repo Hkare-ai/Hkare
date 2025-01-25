@@ -15,13 +15,3 @@ pydantic>=2.5.2
 starlette>=0.27.0
 typing-extensions>=4.8.0
 aiohttp>=3.9.1
-fastapi==0.109.2
-uvicorn==0.27.1
-google-generativeai==0.3.2
-google-search-results==2.4.2  # This is the correct package for SerpAPI
-beautifulsoup4==4.12.3
-python-dotenv==1.0.1
-requests==2.31.0
-jinja2==3.1.3
-python-multipart==0.0.9
-pydantic==2.6.1
